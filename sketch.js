@@ -25,6 +25,7 @@ var bombSound;
 var matchSound;
 
 var myHistory = [];
+var myRanking = [];
 
 var canvas;
 var onlineDiv;
@@ -146,6 +147,7 @@ function setup() {
 	$('.disPanel').hide();
 	$('.resultPanel').hide();
 	$('.hisPanel').hide();
+	$('.rankPanel').hide();
 	$('.alarmPanel').hide();
 
 	nameInput.input(function() {
@@ -405,9 +407,35 @@ function startConnection(source) {
 
 	socket.on('history', function(data) {
 		myHistory.push(data);
-		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + " [" + data.player1_score + "]" + " VS " + 
+		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + 
+			" [" + data.player1_score + "]" + " VS " + 
 			data.player2_nickname + " [" + data.player2_score + "]</div>");
+		console.log(myHistory);
+		myRanking = myHistory.sort(compareScore);
+		console.log(myRanking);
+		$('#rankLabel').html('');
+		for (var i = 0; i <= myRanking.length; i++) {
+			var winner;
+			if(myRanking[i].player1_score > myRanking[i].player2_score){
+				winner = myRanking[i].player1_nickname;
+				score = myRanking[i].player1_score + "-" + myRanking[i].player2_score;
+			}else if(myRanking[i].player1_score < myRanking[i].player2_score){
+				winner = myRanking[i].player2_nickname;
+				score = myRanking[i].player2_score + "-" + myRanking[i].player1_score;
+			}else{
+				winner = "draw";
+				score = myRanking[i].player1_score + "-" + myRanking[i].player2_score;
+			}
+			$('#rankLabel').append("<div> "+(i+1)+") " + winner + " [ "+ score +" ] </div>");
+		}
+		
 	});
+
+	// socket.on('ranking', function(data) {
+	// 	myRanking.push(data);
+	// 	$('#rankLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + " [" + data.player1_score + "]" + " VS " + 
+	// 		data.player2_nickname + " [" + data.player2_score + "]</div>");
+	// });
 
 	socket.on('disGame', function(data) {
 		if(data) {
@@ -681,4 +709,13 @@ function logout() {
 	playingPanel.hide();
 	canvas.hide();
 	$('.loginPanel').show(1000);
+}
+
+function compareScore(game1,game2){
+	var dif1 = Math.abs(game1.player1_score-game1.player2_score);
+	console.log('dif1 = '+dif1);
+	var dif2 = Math.abs(game2.player1_score-game2.player2_score);
+	console.log('dif2 = '+dif2);
+	console.log('dif1-dif2 = '+(dif1-dif2));
+	return dif2-dif1;
 }
