@@ -1,5 +1,5 @@
 var socket;
-var address = 'localhost:3000';
+var address = '10.204.103.156:3000';
 
 var imgBomb;
 var imgTrap;
