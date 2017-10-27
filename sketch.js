@@ -410,32 +410,42 @@ function startConnection(source) {
 		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + 
 			" [" + data.player1_score + "]" + " VS " + 
 			data.player2_nickname + " [" + data.player2_score + "]</div>");
+		console.log("myHistory = ");
 		console.log(myHistory);
-		myRanking = myHistory.sort(compareScore);
-		console.log(myRanking);
-		$('#rankLabel').html('');
-		for (var i = 0; i <= myRanking.length; i++) {
-			var winner;
-			if(myRanking[i].player1_score > myRanking[i].player2_score){
-				winner = myRanking[i].player1_nickname;
-				score = myRanking[i].player1_score + "-" + myRanking[i].player2_score;
-			}else if(myRanking[i].player1_score < myRanking[i].player2_score){
-				winner = myRanking[i].player2_nickname;
-				score = myRanking[i].player2_score + "-" + myRanking[i].player1_score;
-			}else{
-				winner = "draw";
-				score = myRanking[i].player1_score + "-" + myRanking[i].player2_score;
-			}
-			$('#rankLabel').append("<div> "+(i+1)+") " + winner + " [ "+ score +" ] </div>");
 		}
-		
-	});
+	);
 
-	// socket.on('ranking', function(data) {
-	// 	myRanking.push(data);
-	// 	$('#rankLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + " [" + data.player1_score + "]" + " VS " + 
-	// 		data.player2_nickname + " [" + data.player2_score + "]</div>");
-	// });
+
+	socket.on('ranking', function(data) {
+		//myRanking = data.sort(compareScore); //moved to server side
+		//myRanking = data;
+		console.log("myRanking = ");
+		console.log(data);
+		$('#rankLabel').html(''); //clear previous ranking
+
+		//get top 5 to display
+		for (var i = 0; i < 5; i++) {
+			var winner;
+			if(i < data.length){
+				if(data[i].player1_score > data[i].player2_score){
+					winner = data[i].player1_nickname;
+					score = " [ "+data[i].player1_score + "-" + data[i].player2_score+" ]";
+				}else if(data[i].player1_score < data[i].player2_score){
+					winner = data[i].player2_nickname;
+					score = " [ "+data[i].player2_score + "-" + data[i].player1_score+" ]";
+				}else{
+					// winner = "draw";
+					// score = " [ "+data[i].player1_score + "-" + data[i].player2_score+" ]";
+					winner = " -";
+					score = "";
+				}
+			}else{
+				winner = " -";
+				score = "";
+			}
+			$('#rankLabel').append("<div> "+(i+1)+") " + winner +  score + "</div>");
+		}
+	});
 
 	socket.on('disGame', function(data) {
 		if(data) {

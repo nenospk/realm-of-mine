@@ -37,6 +37,12 @@ function newConnection(socket) {
         console.log("[Connected] " + socket.nickname + " [Online] " + onlinePlayerCount);
         io.emit('onlinePlayerCount', onlinePlayerCount);
         io.emit('onlinePlayerList', onlinePlayerList);
+
+        //Set current Ranking
+        io.emit('ranking', ranking);
+        //console.log("ranking from start: ");
+        //console.log(ranking);
+
     });
 
     socket.on('start', function(data) {
@@ -198,18 +204,20 @@ function newConnection(socket) {
             console.log("[Game] " + gameIndex + " End [" + game[gameIndex].player1_nickname + ", " + game[gameIndex].player2_nickname + "] Winner [" + winner + "]");
 
             // Update History for each player
-             io.sockets.connected[game[gameIndex]['player1_socketId']].emit('history', game[gameIndex]);
-             io.sockets.connected[game[gameIndex]['player2_socketId']].emit('history', game[gameIndex]);
-
-            // Update ranking
-          
-            io.sockets.connected[game[gameIndex]['player1_socketId']].emit('ranking', game[gameIndex]);
-            io.sockets.connected[game[gameIndex]['player2_socketId']].emit('ranking', game[gameIndex]);
-
+            io.sockets.connected[game[gameIndex]['player1_socketId']].emit('history', game[gameIndex]);
+            io.sockets.connected[game[gameIndex]['player2_socketId']].emit('history', game[gameIndex]);
+        
             history.push(game[gameIndex]);
             ranking.push(game[gameIndex]);
+            ranking = ranking.sort(compareScore); //sort array of games by compare diff in score
+
+            // Update ranking
+            io.sockets.connected[game[gameIndex]['player1_socketId']].emit('ranking', ranking);
+            io.sockets.connected[game[gameIndex]['player2_socketId']].emit('ranking', ranking);
+
             game.splice(gameIndex, 1);
-            console.log(history);
+
+            //console.log(history);
             console.log(ranking);
         }
     });
@@ -358,6 +366,15 @@ function make2DArray(cols, rows) {
         arr[i] = new Array(rows);
     }
     return arr;
+}
+
+function compareScore(game1,game2){
+    var dif1 = Math.abs(game1.player1_score-game1.player2_score);
+    //console.log('dif1 = '+dif1);
+    var dif2 = Math.abs(game2.player1_score-game2.player2_score);
+    // console.log('dif2 = '+dif2);
+    // console.log('dif1-dif2 = '+(dif1-dif2));
+    return dif2-dif1;
 }
 
 var stdin = process.openStdin();
