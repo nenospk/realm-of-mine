@@ -1,5 +1,5 @@
 var socket;
-var address = 'localhost:3000';
+var address = '10.204.103.156:3000';
 
 var imgBomb;
 var imgTrap;
@@ -25,6 +25,7 @@ var bombSound;
 var matchSound;
 
 var myHistory = [];
+var myRanking = [];
 
 var canvas;
 var onlineDiv;
@@ -146,6 +147,7 @@ function setup() {
 	$('.disPanel').hide();
 	$('.resultPanel').hide();
 	$('.hisPanel').hide();
+	$('.rankPanel').hide();
 	$('.alarmPanel').hide();
 
 	nameInput.input(function() {
@@ -405,8 +407,44 @@ function startConnection(source) {
 
 	socket.on('history', function(data) {
 		myHistory.push(data);
-		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + " [" + data.player1_score + "]" + " VS " + 
+		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + 
+			" [" + data.player1_score + "]" + " VS " + 
 			data.player2_nickname + " [" + data.player2_score + "]</div>");
+		console.log("myHistory = ");
+		console.log(myHistory);
+		}
+	);
+
+
+	socket.on('ranking', function(data) {
+		//myRanking = data.sort(compareScore); //moved to server side
+		//myRanking = data;
+		console.log("myRanking = ");
+		console.log(data);
+		$('#rankLabel').html(''); //clear previous ranking
+
+		//get top 5 to display
+		for (var i = 0; i < 5; i++) {
+			var winner;
+			if(i < data.length){
+				if(data[i].player1_score > data[i].player2_score){
+					winner = data[i].player1_nickname;
+					score = " [ "+data[i].player1_score + "-" + data[i].player2_score+" ]";
+				}else if(data[i].player1_score < data[i].player2_score){
+					winner = data[i].player2_nickname;
+					score = " [ "+data[i].player2_score + "-" + data[i].player1_score+" ]";
+				}else{
+					// winner = "draw";
+					// score = " [ "+data[i].player1_score + "-" + data[i].player2_score+" ]";
+					winner = " -";
+					score = "";
+				}
+			}else{
+				winner = " -";
+				score = "";
+			}
+			$('#rankLabel').append("<div> "+(i+1)+") " + winner +  score + "</div>");
+		}
 	});
 
 	socket.on('disGame', function(data) {
@@ -681,4 +719,13 @@ function logout() {
 	playingPanel.hide();
 	canvas.hide();
 	$('.loginPanel').show(1000);
+}
+
+function compareScore(game1,game2){
+	var dif1 = Math.abs(game1.player1_score-game1.player2_score);
+	console.log('dif1 = '+dif1);
+	var dif2 = Math.abs(game2.player1_score-game2.player2_score);
+	console.log('dif2 = '+dif2);
+	console.log('dif1-dif2 = '+(dif1-dif2));
+	return dif2-dif1;
 }

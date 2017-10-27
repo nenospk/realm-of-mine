@@ -16,9 +16,16 @@
     <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript">
       $(document).ready(function(){
+         $('#rankButton').click(function() {
+
+          $('.rankPanel').toggle(1000);
+        });
+
         $('#historyButton').click(function() {
           $('.hisPanel').toggle(1000);
         });
+
+       
       });
     </script>
   </head>
@@ -28,7 +35,7 @@
 
       <div style="background:url('img/popupMiddle.png'); background-repeat: repeat-y;">
       <div class="wrapper">
-        <div>Hello <label id="nameLabel"></label></div>
+        <div>Hi <label id="nameLabel"></label></div>
 
         <div id="fb-root"></div>
 
@@ -76,6 +83,10 @@
 
     <div class="resultPanel">
       <div id="resultLabel"></div>
+    </div>
+
+    <div class="rankPanel">
+      <div id="rankLabel"></div>
     </div>
 
     <div class="hisPanel">
