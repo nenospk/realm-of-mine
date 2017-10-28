@@ -26,6 +26,7 @@ var matchSound;
 
 var myRanking = [];
 var myHistory = [];
+var myRank = [];
 
 var canvas;
 var onlineDiv;
@@ -148,6 +149,7 @@ function setup() {
 	$('.resultPanel').hide();
 	$('.rankPanel').hide();
 	$('.hisPanel').hide();
+	$('.rankPanel').hide();
 	$('.alarmPanel').hide();
 
 	nameInput.input(function() {
@@ -207,23 +209,29 @@ function startConnection(source) {
 	socket = io.connect(address);
 	var nameSet;
 	var picSet;
+	var isMember;
+	var member;
 	if(source == "fb") {
 		nameSet = fbName;
 		picSet = fbPic;
+		isMember = true;
+		member = fbEmail;
+		logoutButton.hide();
 		fbLogoutButton.show();
 	} else {
 		nameSet = nameInput.value();
 		picSet = "img/profile.png";
+		isMember = false;
+		member = 0;
+		fbLogoutButton.hide();
 		logoutButton.show();
 	}
 
-	onlinePanel.show();
-	findMatchPanel.show();
-	onlineDiv.show();
-
 	var dat = {
 		name: nameSet,
-		pic: picSet
+		pic: picSet,
+		isMember: isMember,
+		member: member
 	}
 	socket.emit('name', dat);
 
@@ -232,11 +240,25 @@ function startConnection(source) {
 
 	// Connected to server
 	socket.on('server', function(data) {
-		console.log(data);
-		connected = true;
-		socket_id = socket.id;
-		$('.loginPanel').hide(1000);
+		if(data) {
+			connected = true;
+			socket_id = socket.id;
+			$('.loginPanel').hide(1000);
+			onlinePanel.show();
+			findMatchPanel.show();
+			onlineDiv.show();
+			onConnection();
+			console.log("Login Success..");
+		} else {
+			console.log("Login Failed..");
+			socket.disconnect();
+			alert('Someone Already Login...');
+		}
 	});
+
+}
+
+function onConnection() {
 
 	// Update Online player
 	socket.on('onlinePlayerCount', function(data) {
@@ -406,9 +428,35 @@ function startConnection(source) {
 	});
 
 	socket.on('history', function(data) {
+		myHistory = data;
+		if(data.length==0) {
+			$('#hisLabel').html("No History");
+		} else {
+			$('#hisLabel').html("");
+			for (var i = 0; i < data.length; i++) {
+				$('#hisLabel').append("<div> Mode : " + data[i].mode + " | " + data[i].player1_nickname + " [" + data[i].player1_score + "]" + " VS " + 
+				data[i].player2_nickname + " [" + data[i].player2_score + "]</div>");
+			}
+		}
+	});
+
+	socket.on('history2', function(data) {
+		//console.log(data);
+		if(myHistory.length==0) {
+			$('#hisLabel').html("");
+		}
 		myHistory.push(data);
 		$('#hisLabel').append("<div> Mode : " + data.mode + " | " + data.player1_nickname + " [" + data.player1_score + "]" + " VS " + 
-			data.player2_nickname + " [" + data.player2_score + "]</div>");
+				data.player2_nickname + " [" + data.player2_score + "]</div>");
+	});
+
+	socket.on('ranking', function(data) {
+		myRank = data;
+		$('#rankLabel').html("");
+		//console.log(data);
+		for (var i = 0; i < data.length; i++) {
+			$('#rankLabel').append("<div>" + (i+1) + ". <img src='" + data[i].pic + "' width='40'> " + data[i].name + " | Score: " +  data[i].score + " | W/D/L: " + data[i].win + "/" + data[i].draw + "/" + data[i].lose + "</div>");
+		}
 	});
 
 	socket.on('ranking', function(data) {
@@ -444,6 +492,14 @@ function startConnection(source) {
 			$('.disPanel').show(1000);
 			clearInterval(timer);
 			mode = "end";
+		}
+	});
+
+	socket.on('out', function(data) {
+		if(data == fbEmail) {
+			console.log("Someone Try to login..");
+			socket.disconnect();
+			console.log("You are disconnected");
 		}
 	});
 }
@@ -639,7 +695,8 @@ function statusChangeCallback(response) {
     fbID = response.authResponse.userID;
 
       if (response.status == 'connected') {
-      	getCurrentUserInfo(response)
+      	getCurrentUserInfo(response);
+      	console.log('Auth success.');
       } else {
       FB.login(function(response) {
         if (response.authResponse){
@@ -685,6 +742,8 @@ function facebookLogout() {
 
 		$('.matchPanel').hide();
 		$('.disPanel').hide();
+		$('.hisPanel').hide();
+		$('.rankPanel').hide();
 		$('.resultPanel').hide(1000);
 		onlinePanel.hide();
 		onlineDiv.hide();
@@ -703,6 +762,8 @@ function logout() {
 
 	$('.matchPanel').hide();
 	$('.disPanel').hide();
+	$('.hisPanel').hide();
+	$('.rankPanel').hide();
 	$('.resultPanel').hide(1000);
 	onlinePanel.hide();
 	onlineDiv.hide();
