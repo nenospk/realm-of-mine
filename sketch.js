@@ -24,7 +24,6 @@ var imgNeigh8;
 var bombSound;
 var matchSound;
 
-var myRanking = [];
 var myHistory = [];
 var myRank = [];
 
@@ -147,7 +146,6 @@ function setup() {
 	$('.matchPanel').hide();
 	$('.disPanel').hide();
 	$('.resultPanel').hide();
-	$('.rankPanel').hide();
 	$('.hisPanel').hide();
 	$('.rankPanel').hide();
 	$('.alarmPanel').hide();
@@ -456,33 +454,6 @@ function onConnection() {
 		//console.log(data);
 		for (var i = 0; i < data.length; i++) {
 			$('#rankLabel').append("<div>" + (i+1) + ". <img src='" + data[i].pic + "' width='40'> " + data[i].name + " | Score: " +  data[i].score + " | W/D/L: " + data[i].win + "/" + data[i].draw + "/" + data[i].lose + "</div>");
-		}
-	});
-
-	socket.on('ranking', function(data) {
-		//console.log("myRanking = ");
-		//console.log(data);
-		$('#rankLabel').html(''); //clear previous ranking
-
-		//get top 5 to display
-		for (var i = 0; i < 5; i++) {
-			var winner;
-			if(i < data.length){
-				if(data[i].player1_score > data[i].player2_score){
-					winner = data[i].player1_nickname;
-					score = " [ "+data[i].player1_score + "-" + data[i].player2_score+" ]";
-				}else if(data[i].player1_score < data[i].player2_score){
-					winner = data[i].player2_nickname;
-					score = " [ "+data[i].player2_score + "-" + data[i].player1_score+" ]";
-				}else{ //(draw)
-					winner = " -";
-					score = "";
-				}
-			}else{
-				winner = " -";
-				score = "";
-			}
-			$('#rankLabel').append("<div> "+(i+1)+") " + winner +  score + "</div>");
 		}
 	});
 
