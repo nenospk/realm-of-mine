@@ -11,6 +11,52 @@ console.log("Server is running ...");
 var io = socket(server);
 io.sockets.on('connection', newConnection);
 
+var MongoClient = require('mongodb').MongoClient;
+var url = "mongodb://localhost:27017/mydb";
+
+
+MongoClient.connect(url, function(err, db) {
+	var myquery = {};
+	db.collection("members").update(myquery, {$set: {online: false}}, function(err, res) {
+	});
+});
+
+/*
+MongoClient.connect(url, function(err, db) {
+	if (err) {
+		throw err;
+	} else {
+		var query = {};
+		db.collection("members").find(query, { _id: false, name: true, pic: true, history: true, online: true, email: "" }).toArray(function(err, result) {
+			console.log(result);
+			db.close();
+		});
+	}
+});
+
+MongoClient.connect(url, function(err, db) {
+  if (err) throw err;
+  db.collection("members").drop(function(err, delOK) {
+    if (err) throw err;
+    if (delOK) console.log("Collection deleted");
+    db.close();
+  });
+}); 
+
+
+MongoClient.connect(url, function(err, db) {
+	if (err) {
+		throw err;
+	} else {
+		var query = {};
+		db.collection("members").find(query, {}).toArray(function(err, result) {
+			console.log(result);
+			db.close();
+		});
+	}
+});
+*/
+
 var onlinePlayerCount = 0;
 var onlinePlayerList = [];
 var matching_easy = [];
@@ -18,25 +64,118 @@ var matching_medium = [];
 var matching_hard = [];
 var game = [];
 var history = [];
-var ranking = [];
+var allplayer = [];
+var ranking = ["-","-","-","-","-"];
+
+MongoClient.connect(url, function(err, db) {
+	if (err) {
+		throw err;
+	} else {
+		var query = {};
+		db.collection("members").find(query, {}).toArray(function(err, result) {
+			//console.log(result);
+			allplayer = result;
+			db.close();
+
+			allplayer.sort(function(a, b) {
+			    return parseFloat(a.score) - parseFloat(b.score);
+			});
+			
+			ranking = allplayer.slice(0,5);
+			//console.log(ranking);
+		});
+	}
+});
 
 function newConnection(socket) {
-	io.sockets.connected[socket.id].emit('server', "You're connected to server");
-
 	// Assign name
 	socket.on('name', function(data) {
 		socket.nickname = data.name;
 		socket.pic = data.pic;
 		socket.position = onlinePlayerList.length;
+		socket.isMember = data.isMember;
+		socket.member = data.member;
 
-		// Player connect
-		onlinePlayerCount++;
-		onlinePlayerList.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic});
+		if(data.isMember) {
+			MongoClient.connect(url, function(err, db) {
+				if (err) throw err;
+				db.collection("members").findOne({"email": data.member}, function(err, result) {
+					if (err) throw err;
+					if(result!=null) {
+						// User already exist
+						//socket.memberId = result._id;
+						if(result.online) {
+							onlinePlayerCount++;
+							io.sockets.connected[socket.id].emit('server', false);
+						} else {
+							// Update online
+							var myquery = {"email": data.member};
+							db.collection("members").update(myquery, {$set: {online: true}}, function(err, res) {
+								if (err) throw err;
+								//io.sockets.connected[socket.id].emit('member', result._id);
+								io.sockets.connected[socket.id].emit('server', true);
+								db.close();
+								// Player connect
+								onlinePlayerCount++;
+								onlinePlayerList.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic, member: socket.member, isMember: socket.isMember});
 
-		// Annouce Player
-		console.log("[Connected] " + socket.nickname + " [Online] " + onlinePlayerCount);
-		io.emit('onlinePlayerCount', onlinePlayerCount);
-		io.emit('onlinePlayerList', onlinePlayerList);
+								// Annouce Player
+								console.log("[Connected][Member] " + socket.nickname + " [Online] " + onlinePlayerCount);
+								io.emit('onlinePlayerCount', onlinePlayerCount);
+								io.emit('onlinePlayerList', onlinePlayerList);
+								io.emit('ranking', ranking);
+							});
+
+							MongoClient.connect(url, function(err, db) {
+								if (err) {
+									throw err;
+								} else {
+									var query = {"email": data.member};
+									db.collection("members").find(query, {}).toArray(function(err, result) {
+										io.emit('history', result[0].history);
+										db.close();
+									});
+								}
+							});
+						}
+					} else {
+						// Add user
+						var myobj = { name: data.name, pic: data.pic, email: data.member, history: [], online: true, win: 0, lose: 0, draw: 0, score: 0};
+						db.collection("members").insertOne(myobj, function(err, res) {
+							if (err) throw err;
+							//io.sockets.connected[socket.id].emit('member', myobj._id);
+							io.sockets.connected[socket.id].emit('server', true);
+							//socket.memberId = myobj._id;
+
+							console.log("[Member] " + data.name + " [Added to database]");
+
+							// Player connect
+							onlinePlayerCount++;
+							onlinePlayerList.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic, member: socket.member, isMember: socket.isMember});
+
+							// Annouce Player
+							console.log("[Connected][Member] " + socket.nickname + " [Online] " + onlinePlayerCount);
+							io.emit('onlinePlayerCount', onlinePlayerCount);
+							io.emit('onlinePlayerList', onlinePlayerList);
+							io.emit('ranking', ranking);
+						});
+					}
+					db.close();
+				});
+			});
+		} else {
+			// Login Success
+			io.sockets.connected[socket.id].emit('server', true);
+			// Player connect
+			onlinePlayerCount++;
+			onlinePlayerList.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic, member: socket.member, isMember: socket.isMember});
+
+			// Annouce Player
+			console.log("[Connected] " + socket.nickname + " [Online] " + onlinePlayerCount);
+			io.emit('onlinePlayerCount', onlinePlayerCount);
+			io.emit('onlinePlayerList', onlinePlayerList);
+			io.emit('ranking', ranking);
+		}
 	});
 
 	socket.on('start', function(data) {
@@ -54,12 +193,12 @@ function newConnection(socket) {
 
 		if(select.length == 0) {
 			console.log("[Matching][" + data + "] Player 1 : " + socket.nickname);
-			select.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic});
+			select.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic, member: socket.member, isMember: socket.isMember});
 			// Let User know
 			io.sockets.connected[socket.id].emit('matching', 1);
 		} else {
 			console.log("[Matching][" + data + "] Player 2 : " + socket.nickname);
-			select.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic});
+			select.push({socketId: socket.id, nickname: socket.nickname, pic: socket.pic, member: socket.member, isMember: socket.isMember});
 			// Let User know
 			io.sockets.connected[socket.id].emit('matching', 2);
 			console.log("[Game][" + data + "] " + game.length + " Start [" + select[0].nickname + ", " + select[1].nickname + "]");
@@ -75,6 +214,10 @@ function newConnection(socket) {
 				player2_socketId: select[1].socketId,
 				player1_nickname: select[0].nickname,
 				player2_nickname: select[1].nickname,
+				player1_member: select[0].member,
+				player2_member: select[1].member,
+				player1_isMember: select[0].isMember,
+				player2_isMember: select[1].isMember,
 				player1_pic: select[0].pic,
 				player2_pic: select[1].pic,
 				player1_score: 0,
@@ -184,36 +327,128 @@ function newConnection(socket) {
 		}
 
 		if(gameIndex>-1 && data.end) {
+			var status1 = 0;
+			var status2 = 0;
 			
 			if(winner==0) {
 				winner = "Draw";
+				status1 = 0;
+				status2 = 0;
 			} else if(winner==1) {
 				winner = game[gameIndex].player1_nickname;
+				status1 = 1;
+				status2 = -1;
 			} else if(winner==2) {
 				winner = game[gameIndex].player2_nickname;
+				status1 = -1;
+				status2 = 1;
 			} else {
 				winner = "Error";
 			}
-
+			
 			console.log("[Game] " + gameIndex + " End [" + game[gameIndex].player1_nickname + ", " + game[gameIndex].player2_nickname + "] Winner [" + winner + "]");
 
 			// Update History for each player
-			io.sockets.connected[game[gameIndex]['player1_socketId']].emit('history', game[gameIndex]);
-			io.sockets.connected[game[gameIndex]['player2_socketId']].emit('history', game[gameIndex]);
+			io.sockets.connected[game[gameIndex]['player1_socketId']].emit('history2', game[gameIndex]);
+			io.sockets.connected[game[gameIndex]['player2_socketId']].emit('history2', game[gameIndex]);
+
+			if(game[gameIndex].player1_isMember) {
+				var member = game[gameIndex]['player1_member'];
+				var newvalues = game[gameIndex];
+				var upScore = game[gameIndex]['player1_score'];
+				// Update database
+				MongoClient.connect(url, function(err, db) {
+					if (err) throw err;
+					var myquery = {'email': member};
+					db.collection("members").update(myquery, { $push: {'history': newvalues}}, function(err, res) {
+						if (err) throw err;
+						db.close();
+					});
+					// Update win lose score
+					db.collection("members").update(myquery, { $inc: {'score': upScore}}, function(err, res) {
+						if (err) throw err;
+						db.close();
+					});
+					if(status1==0) {
+						db.collection("members").update(myquery, { $inc: {'draw': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					} else if(status1==1) {
+						db.collection("members").update(myquery, { $inc: {'win': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					} else if(status1==-1) {
+						db.collection("members").update(myquery, { $inc: {'lose': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					}
+				});
+			}
+
+			if(game[gameIndex].player2_isMember) {
+				var member = game[gameIndex]['player2_member'];
+				var newvalues = game[gameIndex];
+				var upScore = game[gameIndex]['player2_score'];
+				// Update database
+				MongoClient.connect(url, function(err, db) {
+					if (err) throw err;
+					var myquery = {'email': member};
+					db.collection("members").update(myquery, { $push: {'history': newvalues}}, function(err, res) {
+						if (err) throw err;
+						db.close();
+					});
+					// Update win lose score
+					db.collection("members").update(myquery, { $inc: {'score': upScore}}, function(err, res) {
+						if (err) throw err;
+						db.close();
+					});
+					if(status2==0) {
+						db.collection("members").update(myquery, { $inc: {'draw': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					} else if(status2==1) {
+						db.collection("members").update(myquery, { $inc: {'win': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					} else if(status2==-1) {
+						db.collection("members").update(myquery, { $inc: {'lose': 1}}, function(err, res) {
+							if (err) throw err;
+							db.close();
+						});
+					}
+				});
+			}
 
 			// Update ranking
-			io.emit('ranking', ranking);
+			MongoClient.connect(url, function(err, db) {
+				if (err) {
+					throw err;
+				} else {
+					var query = {};
+					db.collection("members").find(query, {}).toArray(function(err, result) {
+						//console.log(result);
+						allplayer = result;
+						db.close();
+
+						allplayer.sort(function(a, b) {
+						    return parseFloat(a.score) - parseFloat(b.score);
+						});
+						
+						ranking = allplayer.slice(0,5);
+						//console.log(ranking);
+						io.emit('ranking', ranking);
+					});
+				}
+			});
 
 			history.push(game[gameIndex]);
 			game.splice(gameIndex,1);
-			//console.log(history);
 		}
-	});
-
-	// Player Logout
-	socket.on('logout', function(data) {
-		socket.disconnect();
-		console.log(socket + " Logout");
 	});
 
 	// Player disconnect
@@ -225,6 +460,16 @@ function newConnection(socket) {
 		console.log("[Disconnected] " + socket.nickname + " [Online] " + onlinePlayerCount);
 		socket.broadcast.emit('onlinePlayerCount', onlinePlayerCount);
 		socket.broadcast.emit('onlinePlayerList', onlinePlayerList);
+		socket.broadcast.emit('out', socket.member);
+
+		// Change to offline
+		if(socket.isMember) {
+			MongoClient.connect(url, function(err, db) {
+				var myquery = {"email": socket.member};
+				db.collection("members").update(myquery, {$set: {online: false}}, function(err, res) {
+				});
+			});
+		}
 
 		// Remove from matching if exist
 		if(matching_easy.length > 0) {
@@ -359,5 +604,13 @@ function make2DArray(cols, rows) {
 var stdin = process.openStdin();
 
 stdin.addListener("data", function(d) {
-	console.log("you entered: [" + d.toString().trim() + "]");
+	//console.log("you entered: [" + d.toString().trim() + "]");
+	var input = d.toString().trim();
+	if(input == "reset") {
+		console.log("Server has been reset!");
+	} else if(input == "rank") {
+		console.log(ranking);
+	} else if(input == "history") {
+		console.log(history);
+	}
 });
