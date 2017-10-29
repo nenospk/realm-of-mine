@@ -23,6 +23,10 @@
         $('#rankButton').click(function() {
           $('.rankPanel').toggle(1000);
         });
+
+        $('#onlineDiv').click(function() {
+          $('.onlinePlayerList').toggle(1000);
+        });
       });
     </script>
   </head>
@@ -94,6 +98,15 @@
 
     <div class="alarmPanel">      
       <div>Please select Mode!</div>
+    </div>
+
+    <div class="onlinePlayerList">      
+      <div id="onlinePlayerList"></div>
+    </div>
+
+    <div class="outPanel">      
+      <div style="color: #e83c3c;">Someone Try to login..</div>
+      <div style="color: #e83c3c;">You are disconnected</div>
     </div>
 
     <div style="height: 58px; background: url('img/bar.png'); background-repeat: no-repeat; background-size: 100% 100%;">
