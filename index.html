@@ -32,6 +32,7 @@
   </head>
   <body oncontextmenu="return false;">
     <div class="loginPanel">
+      <audio id="bgm_title" src="sound/bgm_title.mp3" autoplay="true" loop="true"></audio>
       <div style="height: 49px; background:url('img/popupTop.png'); background-repeat: repeat-y; line-height: 36px;" align="center">Login</div>
 
       <div style="background:url('img/popupMiddle.png'); background-repeat: repeat-y;">
@@ -40,14 +41,14 @@
 
         <div id="fb-root"></div>
 
-        <div class="fb-login-button" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true" scope="public_profile,email" onlogin="checkLoginState();"></div>
+        <div class="fb-login-button" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true" scope="public_profile,email" onlogin="checkLoginState();" onclick="play('click');stop('bgm_title');play('bgm_menu')" ></div>
 
         <div style="margin-top: 15px; margin-bottom: 10px;">OR</div>
 
         <div id="nameInputDiv">
           <form class="form-inline" onsubmit="return false">
             <input type="text" class="form-control" id="nameInput" placeholder="Your name"> 
-            <button id="okButton" class="btn btn-default" style="margin-bottom: 7px;">Enter</button> 
+            <button id="okButton" class="btn btn-default" onclick="play('click');stop('bgm_title');play('bgm_menu')" style="margin-bottom: 7px; " >Enter</button> 
           </form>
         </div>
       </div>
@@ -120,24 +121,24 @@
       <div id="imgLabel" style="display: inline-block;"><img id="profImg" src="img/profile.png" width="64"></div>
       <div style="display: inline-block;"><label id="nameLabel2"></label></div>
       <div style="display: inline-block; float: right;">
-        <button id="fbLogoutButton" class="btn btn-default">Logout</button>
-        <button id="logoutButton" class="btn btn-default">Logout</button>
+        <button id="fbLogoutButton" class="btn btn-default" onclick="play('clickBack');stop('bgm_menu');stop('bgm_ingame');play('bgm_title')" >Logout</button>
+        <button id="logoutButton" class="btn btn-default" onclick="play('clickBack');stop('bgm_menu');stop('bgm_ingame');play('bgm_title')" >Logout</button>
       </div>
       <div style="display: inline-block; float: right;">
-        <button id="historyButton" class="btn btn-default">History</button>
+        <button id="historyButton" class="btn btn-default" onclick="play('click')" >History</button>
       </div>
       <div style="display: inline-block; float: right;">
-        <button id="rankButton" class="btn btn-default">Ranking</button>
+        <button id="rankButton" class="btn btn-default" onclick="play('click')" >Ranking</button>
       </div>
     </div>
 
     <div id="findMatchPanel">
       <div style="display: inline-block;">
-        <input type="radio" id="easy" name="selectMode" value="easy" class="input-hidden" checked /><label for="easy">Easy</label>
-        <input type="radio" id="medium" name="selectMode" value="medium" class="input-hidden"/><label for="medium">Medium</label>
-        <input type="radio" id="hard" name="selectMode" value="hard" class="input-hidden"/><label for="hard">Hard</label>
+        <input type="radio" id="easy" name="selectMode" value="easy" class="input-hidden" checked onclick="play('clickOption')" /><label for="easy">Easy</label>
+        <input type="radio" id="medium" name="selectMode" value="medium" class="input-hidden" onclick="play('clickOption')"/><label for="medium">Medium</label>
+        <input type="radio" id="hard" name="selectMode" value="hard" class="input-hidden" onclick="play('clickOption')" /><label for="hard">Hard</label>
       </div>
-      <div style="display: inline-block;"><button id="startButton" class="btn btn-default">Find Match</button></div>
+      <div style="display: inline-block;"><button id="startButton" class="btn btn-default" onclick="play('click')" >Find Match</button></div>
     </div>
 
     <div id="playingPanel">
@@ -165,5 +166,27 @@
     <!--<div class="mask"></div>-->
 
   </div>
+
+  <audio id="click" src="sound/click.mp3" ></audio>
+  <audio id="clickOption" src="sound/clickOption.mp3" ></audio>
+  <audio id="clickBack" src="sound/clickBack.mp3" ></audio>
+  <audio id="bgm_menu" src="sound/bgm_menu.mp3" loop="true" ></audio>
+  <audio id="bgm_ingame" src="sound/bgm_ingame.mp3" loop="true" ></audio>
+
+  <script>
+
+  function play(soundName){
+    var audio = document.getElementById(soundName);
+    audio.play();
+  }
+
+  function stop(soundName){
+    var audio = document.getElementById(soundName);
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  </script>
+
   </body>
 </html>

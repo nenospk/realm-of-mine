@@ -22,7 +22,12 @@ var imgNeigh7;
 var imgNeigh8;
 
 var bombSound;
+var trapSound;
+var digSound;
 var matchSound;
+var winSound;
+var loseSound;
+var drawSound;
 
 var myHistory = [];
 var myRank = [];
@@ -109,7 +114,13 @@ function setup() {
 	canvas = createCanvas(0,0);
 
 	bombSound = loadSound('sound/bombSound.mp3');
+
+	trapSound = loadSound('sound/trap.wav');
+	digSound = loadSound('sound/dig.mp3');
 	matchSound = loadSound('sound/matchmaking.mp3');
+	winSound = loadSound('sound/youWin.mp3');
+	loseSound = loadSound('sound/youLose.mp3');
+	drawSound = loadSound('sound/upgrade.mp3');
 
 	onlineDiv = select('#onlineDiv');
 	onlineLabel = select('#onlineLabel');
@@ -333,6 +344,7 @@ function onConnection() {
 			socket.on('mode', function(data) {
 				//console.log("Game Start");
 				matchSound.play();
+				stop('bgm_menu');
 				setTimeout(function() {
 					$('.matchPanel').hide(1000);
 					createGame(data);
@@ -343,6 +355,7 @@ function onConnection() {
 
 	// Sync game
 	socket.on('syncGame', function(data) {
+		digSound.play();
 		var player1_nickname = data.player1_nickname;
 		var player2_nickname = data.player2_nickname;
 		var player1_pic = data.player1_pic;
@@ -357,6 +370,7 @@ function onConnection() {
 
 		// Update game
 		grid[cellX][cellY].setReveal();
+
 
 		// Update Combo
 		$('#comboLabel_1').html(player1_combo);
@@ -400,6 +414,7 @@ function onConnection() {
 
 		if(data.trap) {
 			//console.log("trap");
+			trapSound.play();
 		}
 
 		//turnLabel.html(turn);
@@ -500,6 +515,8 @@ function make2DArray(cols, rows) {
 }
 
 function createGame(data) {
+	play('bgm_ingame');
+
 	cols = data[0];
 	rows = data[1];
 	var bomb = data[2];
@@ -616,23 +633,29 @@ function checkEnd() {
 
 		var winner;
 		var msg;
+		var endSound;
 		
 		// Determine result
 		if(score_1 == score_2) {
+			endSound=drawSound;
 			msg = "Draw!";
 			winner = 0;
 		} else if(score_1 > score_2) {
 			if(player == 1) {
 				msg = "Victory!";
+				endSound=winSound;
 			} else {
 				msg = "Defeated!";
+				endSound=loseSound;
 			}
 			winner = 1;
 		} else if(score_1 < score_2) {
 			if(player == 2) {
 				msg = "Victory!";
+				endSound=winSound;
 			} else {
 				msg = "Defeated!";
+				endSound=loseSound;
 			}
 			winner = 2;
 		}
@@ -649,11 +672,15 @@ function checkEnd() {
 		}
 		socket.emit('end', detail);
 		console.log(msg);
+		endSound.play();
 		$('#resultLabel').html(msg);
 		$('.resultPanel').show(1000);
 		setTimeout(function() {
 			$('.resultPanel').hide(1000);
 		}, 3000);
+
+		stop('bgm_ingame');
+		play('bgm_menu');
 	}
 }
 
@@ -727,6 +754,11 @@ function facebookLogout() {
 		mode = "";
 		socket.disconnect();
 
+		play('clickBack');
+		play('bgm_title');
+		stop('bgm_menu');
+		stop('bgm_ingame');
+
 		$('.matchPanel').hide();
 		$('.disPanel').hide();
 		$('.hisPanel').hide();
@@ -747,6 +779,11 @@ function logout() {
 	connected = false;
 	mode = "";
 	socket.disconnect();
+
+	play('clickBack');
+	play('bgm_title');
+	stop('bgm_menu');
+	stop('bgm_ingame');
 
 	$('.matchPanel').hide();
 	$('.disPanel').hide();
