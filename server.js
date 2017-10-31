@@ -279,14 +279,14 @@ function newConnection(socket) {
 			if(data.bomb) {
 				// Update Score
 				game[gameIndex]['player' + player + '_score'] += (1 * game[gameIndex]['player' + player + '_combo']);
-				console.log("[Game][" + game[gameIndex]['mode'] + "] " + gameIndex + " [Score] " + game[gameIndex]['player1_score'] + " - " + game[gameIndex]['player2_score']);
+				console.log("[Game][" + game[gameIndex]['mode'] + "] " + gameIndex + " Score [" + game[gameIndex]['player1_score'] + " - " + game[gameIndex]['player2_score'] + "]");
 				game[gameIndex]['bomb'] = true;
 				// Update Combo
 				if(game[gameIndex]['player' + player + '_combo'] < 5) game[gameIndex]['player' + player + '_combo'] += 1;
 			} else if(data.trap) {
 				// Update Score
 				if(game[gameIndex]['player' + player + '_score'] > 0) game[gameIndex]['player' + player + '_score'] -= 1;
-				console.log("[Game][" + game[gameIndex]['mode'] + "] " + gameIndex + " [Score] " + game[gameIndex]['player1_score'] + " - " + game[gameIndex]['player2_score']);
+				console.log("[Game][" + game[gameIndex]['mode'] + "] " + gameIndex + " Score [" + game[gameIndex]['player1_score'] + " - " + game[gameIndex]['player2_score'] + "]");
 				game[gameIndex]['trap'] = true;
 				// Update Combo
 				game[gameIndex]['player' + player + '_combo'] = 1;
@@ -609,8 +609,22 @@ stdin.addListener("data", function(d) {
 	if(input == "reset") {
 		console.log("Server has been reset!");
 	} else if(input == "rank") {
-		console.log(ranking);
+		//console.log(ranking);
+		if(ranking.length==0) console.log("No Ranking");
+		for (var i = 0; i < ranking.length; i++) {
+			var no = i+1;
+			console.log("[" + no + "][" + ranking[i].name + "] Score: " + ranking[i].score + " W/D/L: " + ranking[i].win + "/" + ranking[i].draw + "/" + ranking[i].lose);
+		}
 	} else if(input == "history") {
-		console.log(history);
+		//console.log(history);
+		if(history.length==0) console.log("No History");
+		for (var i = 0; i < history.length; i++) {
+			console.log("[History] [" + history[i].mode + "][" + history[i].player1_nickname + ", " + history[i].player2_nickname + "]" + " [" + history[i].player1_score + " - " + history[i].player2_score + "]");
+		}
+	} else if(input == "online") {
+		console.log(onlinePlayerCount + " player(s) online");
+		for (var i = 0; i < onlinePlayerList.length; i++) {
+			console.log(onlinePlayerList[i].nickname + " is online");
+		}
 	}
 });

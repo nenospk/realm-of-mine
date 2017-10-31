@@ -179,11 +179,36 @@ canvas {
 	transform: translate(-50%, -50%);
 }
 
+.onlinePlayerList {
+	width: 550px;
+	height: auto;
+	border-radius: 15px;
+	background-color: rgba(0,0,0,0.6);
+	padding: 30px 0px 30px 0px;
+	text-align: center;
+	position: fixed;
+	top: 40%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
 .rankPanel {
 	width: 550px;
 	height: auto;
 	border-radius: 15px;
 	background-color: rgba(0,0,0,0.6);
+	padding: 30px 0px 30px 0px;
+	text-align: center;
+	position: fixed;
+	top: 40%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.outPanel {
+	width: 500px;
+	border-radius: 15px;
+	background-color: rgba(0,0,0,0.5);
 	padding: 30px 0px 30px 0px;
 	text-align: center;
 	position: fixed;

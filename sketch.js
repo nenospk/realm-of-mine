@@ -114,6 +114,7 @@ function setup() {
 	canvas = createCanvas(0,0);
 
 	bombSound = loadSound('sound/bombSound.mp3');
+
 	trapSound = loadSound('sound/trap.wav');
 	digSound = loadSound('sound/dig.mp3');
 	matchSound = loadSound('sound/matchmaking.mp3');
@@ -159,6 +160,8 @@ function setup() {
 	$('.hisPanel').hide();
 	$('.rankPanel').hide();
 	$('.alarmPanel').hide();
+	$('.outPanel').hide();
+	$('.onlinePlayerList').hide();
 
 	nameInput.input(function() {
 		nameLabel.html(nameInput.value());
@@ -259,6 +262,7 @@ function startConnection(source) {
 			console.log("Login Success..");
 		} else {
 			console.log("Login Failed..");
+			fbStatus == false;
 			socket.disconnect();
 			alert('Someone Already Login...');
 		}
@@ -271,6 +275,14 @@ function onConnection() {
 	// Update Online player
 	socket.on('onlinePlayerCount', function(data) {
 		onlineLabel.html(data);
+	});
+
+	// Update Online player List
+	socket.on('onlinePlayerList', function(data) {
+		$('#onlinePlayerList').html("");
+		for (var i = 0; i < data.length; i++) {
+			$('#onlinePlayerList').append("<div><img src='" + data[i].pic + "' width='40'> " + data[i].nickname + " [online]</div>");
+		}
 	});
 
 	// Matching
@@ -475,6 +487,8 @@ function onConnection() {
 		if(data) {
 			//console.log("Another user disconnected");
 			$('.disPanel').show(1000);
+			countTime = 10;
+			timerDiv.html(countTime);
 			clearInterval(timer);
 			mode = "end";
 		}
@@ -483,8 +497,11 @@ function onConnection() {
 	socket.on('out', function(data) {
 		if(data == fbEmail) {
 			console.log("Someone Try to login..");
-			socket.disconnect();
 			console.log("You are disconnected");
+			$('.outPanel').show();
+			setTimeout(function() {
+				facebookLogout();
+			}, 1000);
 		}
 	});
 }
@@ -648,11 +665,11 @@ function checkEnd() {
 		$('.player_2_panel').removeClass('shadow-pulse');
 
 		var detail = {
-					playerSocket: socket.id,
-					player: player,
-					winner: winner,
-					end: true
-				}
+			playerSocket: socket.id,
+			player: player,
+			winner: winner,
+			end: true
+		}
 		socket.emit('end', detail);
 		console.log(msg);
 		endSound.play();
@@ -693,7 +710,7 @@ function statusChangeCallback(response) {
 
       if (response.status == 'connected') {
       	getCurrentUserInfo(response);
-      	console.log('Auth success.');
+      	//console.log('Auth success.');
       } else {
       FB.login(function(response) {
         if (response.authResponse){
@@ -746,6 +763,7 @@ function facebookLogout() {
 		$('.disPanel').hide();
 		$('.hisPanel').hide();
 		$('.rankPanel').hide();
+		$('.outPanel').hide();
 		$('.resultPanel').hide(1000);
 		onlinePanel.hide();
 		onlineDiv.hide();
@@ -771,6 +789,7 @@ function logout() {
 	$('.disPanel').hide();
 	$('.hisPanel').hide();
 	$('.rankPanel').hide();
+	$('.outPanel').hide();
 	$('.resultPanel').hide(1000);
 	onlinePanel.hide();
 	onlineDiv.hide();
