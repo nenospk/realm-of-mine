@@ -1,5 +1,26 @@
 var socket;
-var address = 'localhost:3000';
+var address;
+
+var socket = io('http://localhost:5000');
+socket.on('server', function(data) {
+	//console.log(data);
+	//window.location = "game.html?server=" + data;
+	address = data;
+});
+
+/*
+function getParameterByName(name, url) {
+    if (!url) url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+}
+var address = getParameterByName('server');
+if(address==null || address=="") window.location = "index.html";
+*/
 
 var imgBomb;
 var imgTrap;
@@ -56,6 +77,11 @@ var fbLogoutButton;
 var playingPanel;
 var onlinePanel;
 var findMatchPanel;
+
+var nameSet;
+var picSet;
+var isMember;
+var member;
 
 var fbStatus = false;
 var fbID = "";
@@ -218,10 +244,6 @@ function draw() {
 
 function startConnection(source) {
 	socket = io.connect(address);
-	var nameSet;
-	var picSet;
-	var isMember;
-	var member;
 	if(source == "fb") {
 		nameSet = fbName;
 		picSet = fbPic;
@@ -259,12 +281,16 @@ function startConnection(source) {
 			findMatchPanel.show();
 			onlineDiv.show();
 			onConnection();
+			play('click');
+			stop('bgm_title');
+			play('bgm_menu');
 			console.log("Login Success..");
 		} else {
 			console.log("Login Failed..");
 			fbStatus == false;
 			socket.disconnect();
 			alert('Someone Already Login...');
+			location.reload();
 		}
 	});
 
@@ -290,7 +316,7 @@ function onConnection() {
 		//console.log(data);
 
 		// Reset
-		$('#match1').attr('src', "img/profileWait.png");
+		$('#match1').attr('src', "img/profile.png");
 		$('#match2').attr('src', "img/profileWait.png");
 		$('#match2').css("border", "none");
 		$('.resultPanel').hide(1000);
@@ -495,7 +521,8 @@ function onConnection() {
 	});
 
 	socket.on('out', function(data) {
-		if(data == fbEmail) {
+		//console.log(data);
+		if(data.member == member && data.isMember) {
 			console.log("Someone Try to login..");
 			console.log("You are disconnected");
 			$('.outPanel').show();
@@ -671,13 +698,15 @@ function checkEnd() {
 			end: true
 		}
 		socket.emit('end', detail);
-		console.log(msg);
 		endSound.play();
+		console.log(msg);
 		$('#resultLabel').html(msg);
 		$('.resultPanel').show(1000);
+		/*
 		setTimeout(function() {
 			$('.resultPanel').hide(1000);
 		}, 3000);
+		*/
 
 		stop('bgm_ingame');
 		play('bgm_menu');

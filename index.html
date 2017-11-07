@@ -9,9 +9,9 @@
     <script src="lib/p5.min.js"></script>
     <script src="lib/addons/p5.dom.min.js"></script>
     <script src="lib/addons/p5.sound.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <script src="sketch.js"></script>
     <script src="cell.js"></script>
-    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
     <link rel="stylesheet" href="css/bootstrap.min.css">
     <link rel="stylesheet" href="css/style.css">
     <script type="text/javascript">
@@ -27,6 +27,23 @@
         $('#onlineDiv').click(function() {
           $('.onlinePlayerList').toggle(1000);
         });
+
+        $('#share').click(function() {
+        FB.ui({
+             method: 'feed',
+             //link: 'https://abc.com/',
+             picture: 'http://www.freepngimg.com/download/winner/9-2-winner-png-clipart.png',
+             caption: 'REALM OF MINER',
+             description: 'Dialogs provide a simple, consistent interface for applications to interface with users.',
+          },
+          function(response) {
+            if (response && !response.error_code) {
+              alert('Posting completed.');
+            } else {
+              //alert('Error while posting.');
+            }
+          });
+        });
       });
     </script>
   </head>
@@ -41,14 +58,14 @@
 
         <div id="fb-root"></div>
 
-        <div class="fb-login-button" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true" scope="public_profile,email" onlogin="checkLoginState();" onclick="play('click');stop('bgm_title');play('bgm_menu')" ></div>
+        <div class="fb-login-button" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true" scope="public_profile,email" onlogin="checkLoginState();" ></div>
 
         <div style="margin-top: 15px; margin-bottom: 10px;">OR</div>
 
         <div id="nameInputDiv">
           <form class="form-inline" onsubmit="return false">
             <input type="text" class="form-control" id="nameInput" placeholder="Your name"> 
-            <button id="okButton" class="btn btn-default" onclick="play('click');stop('bgm_title');play('bgm_menu')" style="margin-bottom: 7px; " >Enter</button> 
+            <button id="okButton" class="btn btn-default" style="margin-bottom: 7px; " >Enter</button> 
           </form>
         </div>
       </div>
@@ -85,6 +102,7 @@
 
     <div class="resultPanel">
       <div id="resultLabel"></div>
+      <div id="shareToFb" align="center"><div id="share">Share to facebook</div></div>
     </div>
 
     <div class="hisPanel">

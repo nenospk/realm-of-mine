@@ -1,8 +1,21 @@
+var portNum = 3000;
+
+var dgram = require('dgram');
+var broadcastServer = dgram.createSocket('udp4');
+
+broadcastServer.bind(4000);
+
+//when client ask for ip and port from broadcasting, send it to that client
+broadcastServer.on('message', (msg, rinfo) => {
+	var message = portNum.toString();
+	broadcastServer.send(message, 0, message.length, rinfo.port, rinfo.address);
+});
+
 var express = require('express');
 var socket = require('socket.io');
 
 var app = express();
-var server  = app.listen(3000);
+var server  = app.listen(portNum);
 
 app.use(express.static('public'));
 
@@ -460,7 +473,11 @@ function newConnection(socket) {
 		console.log("[Disconnected] " + socket.nickname + " [Online] " + onlinePlayerCount);
 		socket.broadcast.emit('onlinePlayerCount', onlinePlayerCount);
 		socket.broadcast.emit('onlinePlayerList', onlinePlayerList);
-		socket.broadcast.emit('out', socket.member);
+		var dat = {
+			isMember: socket.isMember,
+			member: socket.member
+		}
+		socket.broadcast.emit('out', dat);
 
 		// Change to offline
 		if(socket.isMember) {
