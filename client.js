@@ -1,7 +1,8 @@
 console.log("Client is running ...");
+console.log("Searching for server ...");
 
 // Find server
-var broadcast_addr = '192.168.1.255';
+var broadcast_addr = '10.202.255.255';
 var port = 4000;
 var setup;
 
@@ -31,11 +32,13 @@ var io = socket(server);
 io.sockets.on('connection', function(socket){
 	console.log("Client connected");
 	io.sockets.connected[socket.id].emit('server', setup);
+	socket.on('disconnect', function() {
+		console.log("Client disconnected");
+	});
 });
 
-io.sockets.on('connection', function(socket){
-	console.log("Client connected");
-	io.sockets.connected[socket.id].emit('server', setup);
-});
+function myFunc() {
+	if(setup==null) console.log("Server is unavailable!");
+}
 
-if(setup==null) console.log("Server is unavailable!");
+setTimeout(myFunc, 2000);
