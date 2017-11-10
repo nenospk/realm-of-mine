@@ -1,8 +1,11 @@
 console.log("Client is running ...");
 console.log("Searching for server ...");
 
+var ip = require('ip');
+
 // Find server
-var broadcast_addr = '10.202.255.255';
+console.log(ip.address());
+var broadcast_addr = ip.or(ip.address(), '0.0.0.255');
 var port = 4000;
 var setup;
 
