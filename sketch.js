@@ -1,7 +1,7 @@
 var socket;
 var address;
 
-var socket = io('http://localhost:5000');
+var socket = io('http://localhost:5001');
 socket.on('server', function(data) {
 	//console.log(data);
 	//window.location = "game.html?server=" + data;
@@ -755,7 +755,11 @@ function statusChangeCallback(response) {
 
 function getCurrentUserInfo() {
 FB.api('/me?fields=first_name,middle_name,email,picture.width(200)', function(userInfo) {
-	fbName = userInfo.first_name + " " + userInfo.middle_name;
+	if(userInfo.middle_name=="") {
+		fbName = userInfo.first_name;
+	} else {
+		fbName = userInfo.first_name + " " + userInfo.middle_name;
+	}
 	fbEmail = userInfo.email;
 	fbPic = userInfo.picture.data.url;
 
