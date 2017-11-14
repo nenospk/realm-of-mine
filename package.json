@@ -11,9 +11,11 @@
   "dependencies": {
     "dgram": "^1.0.1",
     "express": "^4.16.1",
+    "ifconfig": "0.0.1",
     "ip": "^1.1.5",
     "mongodb": "^2.2.33",
     "node-cmd": "^3.0.0",
+    "os": "^0.1.1",
     "socket.io": "^2.0.3"
   }
 }

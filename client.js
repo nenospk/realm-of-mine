@@ -2,7 +2,7 @@ console.log("Client is running ...");
 console.log("Searching for server ...");
 
 var ip = require('ip');
-var cmd = require('node-cmd');
+//var cmd = require('node-cmd');
 
 /*
 var firstvariable = "Subnet Mask . . . . . . . . . . . : ";
@@ -12,7 +12,21 @@ var a = test.match(new RegExp(firstvariable + "(.*)" + secondvariable));
 //console.log(a[1]);
 */
 
+var os = require('os');
+var network = os.networkInterfaces();
+
 var subnetmask = '';
+
+for(i in network){
+	for(j in network[i]){
+		if(network[i][j].family=="IPv4" && !network[i][j].internal) {
+			subnetmask = network[i][j].netmask;
+			findServer();
+		}
+	}
+}
+
+/*
 cmd.get(
     'ipconfig',
     function(err, data, stderr){
@@ -20,7 +34,7 @@ cmd.get(
     	var firstvariable = "   Subnet Mask . . . . . . . . . . . : ";
     	var secondvariable = "   Default Gateway . . . . . . . . .";
     	var result = data.match(new RegExp(firstvariable + "(.*)" + secondvariable));
-    	*/
+    	
 
     	var index_1 = data.search("Subnet Mask . . . . . . . . . . . :") + 36;
     	var index_2 = data.search("Default Gateway . . . . . . . . . :")
@@ -30,7 +44,7 @@ cmd.get(
     	findServer();
     }
 );
-
+*/
 
 function findServer() {
 	// Find server
