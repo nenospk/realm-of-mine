@@ -17,10 +17,11 @@ var express = require('express');
 var socket = require('socket.io');
 
 var app = express();
-//var server  = app.listen(portNum);
+var server  = app.listen(portNum);
 //app.use(express.static('public'));
-
-var server = app.use((req, res) => res.sendFile('index.html', { root: path.join(__dirname, '../public') }) ).listen(portNum, () => console.log(`Listening on ${ portNum }`));
+app.get('/',function(req,res) {
+	res.sendFile(__dirname + '/index.html');
+});
 
 console.log("Server is running ...");
 
