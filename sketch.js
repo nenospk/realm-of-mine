@@ -1,12 +1,16 @@
 var socket;
 var address;
 
-var socket = io('http://localhost:5001');
+address = "https://realm-of-mine.herokuapp.com:3000";
+
+/*
+var socket = io('http://localhost');
 socket.on('server', function(data) {
 	//console.log(data);
 	//window.location = "game.html?server=" + data;
 	address = data;
 });
+*/
 
 /*
 function getParameterByName(name, url) {

@@ -1,5 +1,6 @@
 var portNum = 3000;
 
+/*
 var dgram = require('dgram');
 var broadcastServer = dgram.createSocket('udp4');
 
@@ -10,6 +11,7 @@ broadcastServer.on('message', (msg, rinfo) => {
 	var message = portNum.toString();
 	broadcastServer.send(message, 0, message.length, rinfo.port, rinfo.address);
 });
+*/
 
 var express = require('express');
 var socket = require('socket.io');
