@@ -20,7 +20,7 @@ var app = express();
 //var server  = app.listen(portNum);
 //app.use(express.static('public'));
 
-app.use((req, res) => res.sendFile('index.html', { root: path.join(__dirname, '../public') }) ).listen(portNum, () => console.log(`Listening on ${ portNum }`));
+var server = app.use((req, res) => res.sendFile('index.html', { root: path.join(__dirname, '../public') }) ).listen(portNum, () => console.log(`Listening on ${ portNum }`));
 
 console.log("Server is running ...");
 
