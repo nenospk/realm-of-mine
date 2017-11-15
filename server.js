@@ -25,7 +25,8 @@ var io = socket(server);
 io.sockets.on('connection', newConnection);
 
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://localhost:27017/mydb";
+var url = "mongodb://rom:nenaneno@ds259855.mlab.com:59855/realm-of-mine";
+//var url = "mongodb://localhost:27017/mydb";
 
 
 MongoClient.connect(url, function(err, db) {
