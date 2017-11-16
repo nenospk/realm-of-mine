@@ -1,6 +1,5 @@
 var portNum = 3000;
 
-/*
 var dgram = require('dgram');
 var broadcastServer = dgram.createSocket('udp4');
 
@@ -11,7 +10,6 @@ broadcastServer.on('message', (msg, rinfo) => {
 	var message = portNum.toString();
 	broadcastServer.send(message, 0, message.length, rinfo.port, rinfo.address);
 });
-*/
 
 var express = require('express');
 var socket = require('socket.io');
@@ -29,9 +27,8 @@ var io = socket(server);
 io.sockets.on('connection', newConnection);
 
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://rom:nenaneno@ds259855.mlab.com:59855/realm-of-mine";
-//var url = "mongodb://localhost:27017/mydb";
-
+//var url = "mongodb://rom:nenaneno@ds259855.mlab.com:59855/realm-of-mine";
+var url = "mongodb://localhost:27017/mydb";
 
 MongoClient.connect(url, function(err, db) {
 	var myquery = {};
@@ -100,12 +97,38 @@ MongoClient.connect(url, function(err, db) {
 			});
 			
 			ranking = allplayer.slice(0,5);
-			//console.log(ranking);
 		});
 	}
 });
 
 function newConnection(socket) {
+	var stdin = process.openStdin();
+
+	stdin.addListener("data", function(d) {
+		//console.log("you entered: [" + d.toString().trim() + "]");
+		var input = d.toString().trim();
+		if(input == "reset") {
+			console.log("Server has been reset!");
+		} else if(input == "rank") {
+			//console.log(ranking);
+			if(ranking.length==0) console.log("No Ranking");
+			for (var i = 0; i < ranking.length; i++) {
+				var no = i+1;
+				console.log("[" + no + "][" + ranking[i].name + "] Score: " + ranking[i].score + " W/D/L: " + ranking[i].win + "/" + ranking[i].draw + "/" + ranking[i].lose);
+			}
+		} else if(input == "history") {
+			//console.log(history);
+			if(history.length==0) console.log("No History");
+			for (var i = 0; i < history.length; i++) {
+				console.log("[History] [" + history[i].mode + "][" + history[i].player1_nickname + ", " + history[i].player2_nickname + "]" + " [" + history[i].player1_score + " - " + history[i].player2_score + "]");
+			}
+		} else if(input == "online") {
+			console.log(onlinePlayerCount + " player(s) online");
+			for (var i = 0; i < onlinePlayerList.length; i++) {
+				console.log(onlinePlayerList[i].nickname + " is online");
+			}
+		}
+	});
 	// Assign name
 	socket.on('name', function(data) {
 		socket.nickname = data.name;
@@ -150,7 +173,8 @@ function newConnection(socket) {
 								} else {
 									var query = {"email": data.member};
 									db.collection("members").find(query, {}).toArray(function(err, result) {
-										io.emit('history', result[0].history);
+										io.sockets.connected[socket.id].emit('history', result[0].history);
+										//console.log(result[0]);
 										db.close();
 									});
 								}
@@ -371,74 +395,67 @@ function newConnection(socket) {
 			io.sockets.connected[game[gameIndex]['player2_socketId']].emit('history2', game[gameIndex]);
 
 			if(game[gameIndex].player1_isMember) {
-				var member = game[gameIndex]['player1_member'];
-				var newvalues = game[gameIndex];
-				var upScore = game[gameIndex]['player1_score'];
+				console.log("Added1");
+				var up_1_member = game[gameIndex]['player1_member'];
+				var up_1_newvalues = game[gameIndex];
+				var up_1_upScore = game[gameIndex]['player1_score'];
 				// Update database
 				MongoClient.connect(url, function(err, db) {
 					if (err) throw err;
-					var myquery = {'email': member};
-					db.collection("members").update(myquery, { $push: {'history': newvalues}}, function(err, res) {
+					var up_1_myquery = {'email': up_1_member};
+					db.collection("members").update(up_1_myquery, { $push: {'history': up_1_newvalues}}, function(err, res) {
 						if (err) throw err;
-						db.close();
 					});
 					// Update win lose score
-					db.collection("members").update(myquery, { $inc: {'score': upScore}}, function(err, res) {
+					db.collection("members").update(up_1_myquery, { $inc: {'score': up_1_upScore}}, function(err, res) {
 						if (err) throw err;
-						db.close();
 					});
 					if(status1==0) {
-						db.collection("members").update(myquery, { $inc: {'draw': 1}}, function(err, res) {
+						db.collection("members").update(up_1_myquery, { $inc: {'draw': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					} else if(status1==1) {
-						db.collection("members").update(myquery, { $inc: {'win': 1}}, function(err, res) {
+						db.collection("members").update(up_1_myquery, { $inc: {'win': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					} else if(status1==-1) {
-						db.collection("members").update(myquery, { $inc: {'lose': 1}}, function(err, res) {
+						db.collection("members").update(up_1_myquery, { $inc: {'lose': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					}
+					db.close();
 				});
 			}
 
 			if(game[gameIndex].player2_isMember) {
-				var member = game[gameIndex]['player2_member'];
-				var newvalues = game[gameIndex];
-				var upScore = game[gameIndex]['player2_score'];
+				var up_2_member = game[gameIndex]['player2_member'];
+				var up_2_newvalues = game[gameIndex];
+				var up_2_upScore = game[gameIndex]['player2_score'];
 				// Update database
 				MongoClient.connect(url, function(err, db) {
 					if (err) throw err;
-					var myquery = {'email': member};
-					db.collection("members").update(myquery, { $push: {'history': newvalues}}, function(err, res) {
+					var up_2_myquery = {'email': up_2_member};
+					db.collection("members").update(up_2_myquery, { $push: {'history': up_2_newvalues}}, function(err, res) {
 						if (err) throw err;
-						db.close();
 					});
 					// Update win lose score
-					db.collection("members").update(myquery, { $inc: {'score': upScore}}, function(err, res) {
+					db.collection("members").update(up_2_myquery, { $inc: {'score': up_2_upScore}}, function(err, res) {
 						if (err) throw err;
-						db.close();
 					});
 					if(status2==0) {
-						db.collection("members").update(myquery, { $inc: {'draw': 1}}, function(err, res) {
+						db.collection("members").update(up_2_myquery, { $inc: {'draw': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					} else if(status2==1) {
-						db.collection("members").update(myquery, { $inc: {'win': 1}}, function(err, res) {
+						db.collection("members").update(up_2_myquery, { $inc: {'win': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					} else if(status2==-1) {
-						db.collection("members").update(myquery, { $inc: {'lose': 1}}, function(err, res) {
+						db.collection("members").update(up_2_myquery, { $inc: {'lose': 1}}, function(err, res) {
 							if (err) throw err;
-							db.close();
 						});
 					}
+					db.close();
 				});
 			}
 
@@ -447,8 +464,8 @@ function newConnection(socket) {
 				if (err) {
 					throw err;
 				} else {
-					var query = {};
-					db.collection("members").find(query, {}).toArray(function(err, result) {
+					var rank_query = {};
+					db.collection("members").find(rank_query, {}).toArray(function(err, result) {
 						//console.log(result);
 						allplayer = result;
 						db.close();
@@ -460,6 +477,7 @@ function newConnection(socket) {
 						ranking = allplayer.slice(0,5);
 						//console.log(ranking);
 						io.emit('ranking', ranking);
+						console.log(ranking);
 					});
 				}
 			});
@@ -622,31 +640,3 @@ function make2DArray(cols, rows) {
 	}
 	return arr;
 }
-
-var stdin = process.openStdin();
-
-stdin.addListener("data", function(d) {
-	//console.log("you entered: [" + d.toString().trim() + "]");
-	var input = d.toString().trim();
-	if(input == "reset") {
-		console.log("Server has been reset!");
-	} else if(input == "rank") {
-		//console.log(ranking);
-		if(ranking.length==0) console.log("No Ranking");
-		for (var i = 0; i < ranking.length; i++) {
-			var no = i+1;
-			console.log("[" + no + "][" + ranking[i].name + "] Score: " + ranking[i].score + " W/D/L: " + ranking[i].win + "/" + ranking[i].draw + "/" + ranking[i].lose);
-		}
-	} else if(input == "history") {
-		//console.log(history);
-		if(history.length==0) console.log("No History");
-		for (var i = 0; i < history.length; i++) {
-			console.log("[History] [" + history[i].mode + "][" + history[i].player1_nickname + ", " + history[i].player2_nickname + "]" + " [" + history[i].player1_score + " - " + history[i].player2_score + "]");
-		}
-	} else if(input == "online") {
-		console.log(onlinePlayerCount + " player(s) online");
-		for (var i = 0; i < onlinePlayerList.length; i++) {
-			console.log(onlinePlayerList[i].nickname + " is online");
-		}
-	}
-});

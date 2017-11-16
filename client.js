@@ -22,6 +22,7 @@ for(i in network){
 		if(network[i][j].family=="IPv4" && !network[i][j].internal) {
 			subnetmask = network[i][j].netmask;
 			findServer();
+			detect();
 		}
 	}
 }
@@ -46,6 +47,18 @@ cmd.get(
 );
 */
 
+var express = require('express');
+var socket = require('socket.io');
+
+var app = express();
+var server  = app.listen(5001);
+
+app.use(express.static('public'));
+
+var io = socket(server);
+
+var setup;
+
 function findServer() {
 	// Find server
 	var broadcast_addr = ip.or(ip.address(), ip.not(subnetmask));
@@ -57,36 +70,43 @@ function findServer() {
 
 	//request data
 	var message = '';
-	var setup;
 	client.send(message, 0, message.length, port, broadcast_addr);
 
 	client.on('message', (msg, rinfo) => {
 		setup = rinfo.address + ':' + msg.toString();
-		console.log("Server: " + setup);
+		//console.log("Server: " + setup);
 		//console.log(setup);
 		client.close();
 	});
+}
 
-	var express = require('express');
-	var socket = require('socket.io');
+function detect() {
 
-	var app = express();
-	var server  = app.listen(5001);
-
-	app.use(express.static('public'));
-
-	var io = socket(server);
-	io.sockets.on('connection', function(socket){
-		console.log("Client connected");
-		io.sockets.connected[socket.id].emit('server', setup);
-		socket.on('disconnect', function() {
-			console.log("Client disconnected");
-		});
-	});
-
+/*
 	function myFunc() {
-		if(setup==null) console.log("Server is unavailable!");
+		if(setup==null) {
+			console.log("Server is unavailable!");
+		}
 	}
-
 	setTimeout(myFunc, 2000);
+*/
+	var again = setInterval(function(){
+		if(setup==null) {
+			console.log("Server is unavailable!");
+			console.log("Try again in 3 seconds");
+			findServer();
+		} else {
+			clearInterval(again);
+			console.log("----------------------------------------");
+			console.log("Server is now available!");
+			console.log("Server: " + setup);
+			io.sockets.on('connection', function(socket){
+				//console.log("Client connected");
+				io.sockets.connected[socket.id].emit('server', setup);
+				socket.on('disconnect', function() {
+					//console.log("Client disconnected");
+				});
+			});
+		}
+	}, 3000);
 }
