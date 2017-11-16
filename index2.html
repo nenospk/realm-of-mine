@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>REALM OF MINER</title>
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon" />
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+    <script src="lib/p5.min.js"></script>
+    <script src="lib/addons/p5.dom.min.js"></script>
+    <script src="lib/addons/p5.sound.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+    <script src="sketch2.js"></script>
+    <script src="cell.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript">
+      $(document).ready(function(){
+        $('#historyButton').click(function() {
+          $('.hisPanel').toggle(1000);
+        });
+
+        $('#rankButton').click(function() {
+          $('.rankPanel').toggle(1000);
+        });
+
+        $('#onlineDiv').click(function() {
+          $('.onlinePlayerList').toggle(1000);
+        });
+
+        $('#share').click(function() {
+        FB.ui({
+             method: 'feed',
+             //link: 'https://abc.com/',
+             picture: 'http://www.freepngimg.com/download/winner/9-2-winner-png-clipart.png',
+             caption: 'REALM OF MINER',
+             description: 'Dialogs provide a simple, consistent interface for applications to interface with users.',
+          },
+          function(response) {
+            if (response && !response.error_code) {
+              alert('Posting completed.');
+            } else {
+              //alert('Error while posting.');
+            }
+          });
+        });
+      });
+    </script>
+  </head>
+  <body oncontextmenu="return false;">
+    <div class="loginPanel">
+      <audio id="bgm_title" src="sound/bgm_title.mp3" autoplay="true" loop="true"></audio>
+      <div style="height: 49px; background:url('img/popupTop.png'); background-repeat: repeat-y; line-height: 36px;" align="center">Login</div>
+
+      <div style="background:url('img/popupMiddle.png'); background-repeat: repeat-y;">
+      <div class="wrapper">
+        <div>Hello <label id="nameLabel"></label></div>
+
+        <div id="fb-root"></div>
+
+        <div class="fb-login-button" data-max-rows="1" data-size="medium" data-button-type="login_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="true" scope="public_profile,email" onlogin="checkLoginState();" ></div>
+
+        <div style="margin-top: 15px; margin-bottom: 10px;">OR</div>
+
+        <div id="nameInputDiv">
+          <form class="form-inline" onsubmit="return false">
+            <input type="text" class="form-control" id="nameInput" placeholder="Your name"> 
+            <button id="okButton" class="btn btn-default" style="margin-bottom: 7px; " >Enter</button> 
+          </form>
+        </div>
+      </div>
+      </div>
+
+      <div style="height: 17px; background:url('img/popupBottom.png'); background-repeat: repeat-y;"></div>
+
+    </div>
+
+<!--
+    <div class="matchPanel">
+      <div class="wrapper">
+        <div>Waiting for a player ...</div>
+        <div style="margin-top: 10px;">
+          <img id="match1" src="img/profile.png" width="68" style="padding: 5px;">
+          <img id="match2" src="img/profile.png" width="68" style="padding: 5px;">
+        </div>
+      </div>
+    </div>
+-->
+
+    <div class="matchPanel">
+      <div>Waiting for a player ...</div>
+      <div style="margin-top: 10px;">
+        <img id="match1" src="img/profile.png" width="68" style="padding: 5px;">
+        <img id="match2" src="img/profile.png" width="68" style="padding: 5px;">
+      </div>
+    </div>
+
+    <div class="disPanel">
+      <div style="color: #e83c3c;">Another user disconnected</div>
+    </div>
+
+
+    <div class="resultPanel">
+      <div id="resultLabel"></div>
+      <div id="shareToFb" align="center"><div id="share">Share to facebook</div></div>
+    </div>
+
+    <div class="hisPanel">
+      <div>History</div>
+      <div id="hisLabel">No History</div>
+    </div>
+
+    <div class="rankPanel">
+       <div>Ranking</div>
+      <div id="rankLabel"></div>
+    </div>
+
+    <div class="alarmPanel">      
+      <div>Please select Mode!</div>
+    </div>
+
+    <div class="onlinePlayerList">      
+      <div id="onlinePlayerList"></div>
+    </div>
+
+    <div class="outPanel">      
+      <div style="color: #e83c3c;">Someone Try to login..</div>
+      <div style="color: #e83c3c;">You are disconnected</div>
+    </div>
+
+    <div style="height: 58px; background: url('img/bar.png'); background-repeat: no-repeat; background-size: 100% 100%;">
+      <div align="center"><img src="img/logo.png" height="120"></div>
+       <div id="onlineDiv" style="text-align: center; padding-top: 5px;"><img src="img/circle_friends.png" height="30"> <label id="onlineLabel"></label>
+      </div>
+    </div>
+
+
+    <div id="onlinePanel">
+      <div id="imgLabel" style="display: inline-block;"><img id="profImg" src="img/profile.png" width="64"></div>
+      <div style="display: inline-block;"><label id="nameLabel2"></label></div>
+      <div style="display: inline-block; float: right;">
+        <button id="fbLogoutButton" class="btn btn-default" onclick="play('clickBack');stop('bgm_menu');stop('bgm_ingame');play('bgm_title')" >Logout</button>
+        <button id="logoutButton" class="btn btn-default" onclick="play('clickBack');stop('bgm_menu');stop('bgm_ingame');play('bgm_title')" >Logout</button>
+      </div>
+      <div style="display: inline-block; float: right;">
+        <button id="historyButton" class="btn btn-default" onclick="play('click')" >History</button>
+      </div>
+      <div style="display: inline-block; float: right;">
+        <button id="rankButton" class="btn btn-default" onclick="play('click')" >Ranking</button>
+      </div>
+    </div>
+
+    <div id="findMatchPanel">
+      <div style="display: inline-block;">
+        <input type="radio" id="easy" name="selectMode" value="easy" class="input-hidden" checked onclick="play('clickOption')" /><label for="easy">Easy</label>
+        <input type="radio" id="medium" name="selectMode" value="medium" class="input-hidden" onclick="play('clickOption')"/><label for="medium">Medium</label>
+        <input type="radio" id="hard" name="selectMode" value="hard" class="input-hidden" onclick="play('clickOption')" /><label for="hard">Hard</label>
+      </div>
+      <div style="display: inline-block;"><button id="startButton" class="btn btn-default" onclick="play('click')" >Find Match</button></div>
+    </div>
+
+    <div id="playingPanel">
+      <div class="player_1_panel">
+        <div align="center" style="margin-top: 50px;"><img id="pic1Label" src="img/profile.png" width="64"> <label id="playerLabel_1"></label></div>
+        <div align="center"><label id="scoreLabel_1" style="font-size: 120px"></label></div>
+      </div>
+
+      <div class="player_1_combo">
+        <label>x</label><label id="comboLabel_1">1</label> 
+      </div>
+
+      <div class="player_2_panel">
+        <div align="center" style="margin-top: 50px;"><img id="pic2Label" src="img/profile.png" width="64"> <label id="playerLabel_2"></label></div>
+        <div align="center"><label id="scoreLabel_2" style="font-size: 120px"></label></div>
+      </div>
+
+      <div class="player_2_combo">
+        <label>x</label><label id="comboLabel_2">1</label> 
+      </div>
+
+      <div class="timer" id="timerDiv">10</div>
+    </div>
+
+    <!--<div class="mask"></div>-->
+
+  </div>
+
+  <audio id="click" src="sound/click.mp3" ></audio>
+  <audio id="clickOption" src="sound/clickOption.mp3" ></audio>
+  <audio id="clickBack" src="sound/clickBack.mp3" ></audio>
+  <audio id="bgm_menu" src="sound/bgm_menu.mp3" loop="true" ></audio>
+  <audio id="bgm_ingame" src="sound/bgm_ingame.mp3" loop="true" ></audio>
+
+  <script>
+
+  function play(soundName){
+    var audio = document.getElementById(soundName);
+    audio.play();
+  }
+
+  function stop(soundName){
+    var audio = document.getElementById(soundName);
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  </script>
+
+  </body>
+</html>
