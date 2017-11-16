@@ -81,6 +81,9 @@ var game = [];
 var history = [];
 var allplayer = [];
 var ranking = ["-","-","-","-","-"];
+var select;
+var currentMode;
+var gameIndex;
 
 MongoClient.connect(url, function(err, db) {
 	if (err) {
@@ -109,6 +112,46 @@ function newConnection(socket) {
 		var input = d.toString().trim();
 		if(input == "reset") {
 			console.log("Server has been reset!");
+			game.splice(gameIndex,1);
+			if(random(0,1) >= 0.5) {
+				var turn = 1;
+			} else {
+				var turn = 2;
+			}
+			var detail = {
+				player1_socketId: select[0].socketId,
+				player2_socketId: select[1].socketId,
+				player1_nickname: select[0].nickname,
+				player2_nickname: select[1].nickname,
+				player1_member: select[0].member,
+				player2_member: select[1].member,
+				player1_isMember: select[0].isMember,
+				player2_isMember: select[1].isMember,
+				player1_pic: select[0].pic,
+				player2_pic: select[1].pic,
+				player1_score: 0,
+				player2_score: 0,
+				player1_combo: 1,
+				player2_combo: 1,
+				turn: turn,
+				mode: currentMode
+			}
+			game.push(detail);
+			var mode;
+			if(currentMode == "easy") {
+				mode = randomBombAndTrap(3, 3, 3, 2);
+			} else if(currentMode == "medium") {
+				mode = randomBombAndTrap(5, 5, 8, 5);
+			} else if(currentMode == "hard") {
+				mode = randomBombAndTrap(6, 6, 12, 10);
+			} else {
+				console.log("Test mode!");
+				mode = randomBombAndTrap(2, 2, 1, 1);
+			}
+			io.sockets.connected[select[0].socketId].emit('matching', detail);
+			io.sockets.connected[select[0].socketId].emit('mode', mode);
+			io.sockets.connected[select[1].socketId].emit('matching', detail);
+			io.sockets.connected[select[1].socketId].emit('mode', mode);
 		} else if(input == "rank") {
 			//console.log(ranking);
 			if(ranking.length==0) console.log("No Ranking");
@@ -221,7 +264,7 @@ function newConnection(socket) {
 	});
 
 	socket.on('start', function(data) {
-		var select;
+		currentMode=data;
 		if(data == "easy") {
 			select = matching_easy;
 		} else if(data == "medium") {
@@ -358,7 +401,6 @@ function newConnection(socket) {
 	});
 
 	socket.on('end', function(data) {
-		var gameIndex;
 		var player = data.player;
 		var winner = data.winner;
 
